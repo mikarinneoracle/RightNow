@@ -15,6 +15,9 @@ module.exports = {
       apikey: { required: true, type: 'string' },
       siteid: { required: true, type: 'string' },
       ordernumberpart: { required: true, type: 'string' },
+      statuscodes: { required: true, type: 'array' },
+      notfoundmsg: { required: true, type: 'string' },
+      notransmsg: { required: true, type: 'string' },
     },
     supportedActions: ['next', 'error', 'tryagain']
   }),
@@ -24,11 +27,15 @@ module.exports = {
     const { apikey } = context.properties();
     var { siteid } = context.properties();
     var { ordernumberpart } = context.properties();
+    var { statuscodes } = context.properties();
+    var { notfoundmsg } = context.properties();
+    var { notransmsg } = context.properties();
     var urlQuery = "";
       
     urlQuery = url + siteid + "/" + ordernumberpart;
     
     console.log(urlQuery);
+    console.log(statuscodes);
     context.logger().info(urlQuery);
     context.logger().info('query: ' + urlQuery);
 
@@ -53,19 +60,24 @@ module.exports = {
 
      if(!bodyResponse.order_status || bodyResponse.order_status == "null")
      {
-         context.reply("Order was not found. Please try again.");
+         context.reply(notfoundmsg);
          context.keepTurn(true);
          context.transition('tryagain');
      } else {
          // Translate the status
-         switch(bodyResponse.order_status) {
-             case "1.9":
-                 context.reply("Your order is being packed.");
-                 break;
-             case "2.0":
-                 context.reply("Your order has been shipped.");
-                 break;
-         };
+         var statuscodesArr = statuscodesArr = JSON.parse(statuscodes); // This works in ODA
+         // var statuscodesArr = statuscodes; // Do this when running locally
+         var status = notransmsg;
+         var i=0;
+         for(i; i < statuscodesArr.length; i++)
+         {
+             if(bodyResponse.order_status.valueOf() == statuscodesArr[i].status.valueOf())
+             {
+                 status = statuscodesArr[i].text;
+                 i = statuscodesArr.length;
+             }
+         }
+         context.reply(status);
          context.keepTurn(true);
          context.transition('next');
      }
