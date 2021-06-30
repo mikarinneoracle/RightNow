@@ -32,7 +32,8 @@ module.exports = {
     var { notransmsg } = context.properties();
     var urlQuery = "";
       
-    urlQuery = url + siteid + "/" + ordernumberpart;
+    var ordernumber = JSON.parse(ordernumberpart);
+    urlQuery = url + siteid + "/" + ordernumber.number;
     
     console.log(urlQuery);
     console.log(statuscodes);
